@@ -1,0 +1,343 @@
+import 'dart:developer';
+import 'dart:io';
+
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:chatapp/api/apis.dart';
+import 'package:chatapp/helper/time_formater.dart';
+import 'package:chatapp/models/massage.dart';
+import 'package:chatapp/models/user.dart';
+import 'package:chatapp/widgets/massage_card.dart';
+import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:image_picker/image_picker.dart';
+
+import '../main.dart';
+import 'info_screen.dart';
+
+class ChatScreen extends StatefulWidget {
+  final CUser user;
+  const ChatScreen({super.key, required this.user});
+
+  @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final TextEditingController _textController = TextEditingController();
+  List<Message> _list = [];
+  bool _showEmoji = false;
+  bool _isUploading = false;
+  bool _isRecording = false;
+  FlutterSoundRecorder _audioRecorder = FlutterSoundRecorder();
+  String _audioPath = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _audioRecorder.openAudioSession();
+  }
+
+  @override
+  void dispose() {
+    _audioRecorder.closeAudioSession();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        FocusScope.of(context).unfocus();
+      },
+      child: SafeArea(
+        child: WillPopScope(
+          onWillPop: () {
+            if (_showEmoji) {
+              setState(() {
+                _showEmoji = false;
+              });
+              return Future.value(false);
+            } else {
+              return Future.value(true);
+            }
+          },
+          child: Scaffold(
+            backgroundColor: const Color.fromARGB(255, 80, 80, 80),
+            appBar: AppBar(
+              automaticallyImplyLeading: false,
+              flexibleSpace: _appBar(),
+            ),
+            body: Container(
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage("images/background.jpg"),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: StreamBuilder(
+                      stream: APIs.getAllMassage(widget.user),
+                      builder: (context, snapshot) {
+                        switch (snapshot.connectionState) {
+                          case ConnectionState.waiting:
+                          case ConnectionState.none:
+                            return const SizedBox();
+                          case ConnectionState.active:
+                          case ConnectionState.done:
+                            final data = snapshot.data?.docs;
+                            _list = data
+                                ?.map((e) => Message.fromJson(e.data()))
+                                .toList() ??
+                                [];
+                            if (_list.isNotEmpty) {
+                              return ListView.builder(
+                                reverse: true,
+                                itemCount: _list.length,
+                                itemBuilder: (context, index) {
+                                  return MessageCard(message: _list[index]);
+                                },
+                              );
+                            } else {
+                              return const Center(
+                                child: Text(
+                                    'Hi there! Send a message to start chatting'),
+                              );
+                            }
+                        }
+                      },
+                    ),
+                  ),
+                  if (_isUploading)
+                    const Align(
+                      alignment: Alignment.bottomRight,
+                      child: Padding(
+                        padding: EdgeInsets.only(right: 10),
+                        child: LinearProgressIndicator(),
+                      ),
+                    ),
+                  _chatInput(),
+                  if (_showEmoji)
+                    SizedBox(
+                      height: _showEmoji ? 300 : 0,
+                      child: EmojiPicker(
+                        textEditingController: _textController,
+                        config: const Config(
+                          bgColor: Colors.black,
+                          columns: 7,
+                          emojiSizeMax: 32,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _appBar() {
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => InfoScreen(user: widget.user)));
+      },
+      child: StreamBuilder(
+        stream: APIs.getUserInfo(widget.user),
+        builder: (context, snapshot) {
+          final datat = snapshot.data?.docs;
+          final list =
+              datat?.map((e) => CUser.fromJson(e.data())).toList() ?? [];
+          if (list.isNotEmpty) {
+            widget.user.isOnline = list[0].isOnline;
+          }
+          return Row(
+            children: [
+              IconButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                icon: const Icon(Icons.arrow_back),
+              ),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(mq.height * .03),
+                child: CachedNetworkImage(
+                  width: mq.height * .05,
+                  height: mq.height * .05,
+                  imageUrl:
+                  list.isNotEmpty ? list[0].image : widget.user.image,
+                  errorWidget: (context, url, error) =>
+                  const CircleAvatar(child: Icon(Icons.person)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(list.isNotEmpty ? list[0].name : widget.user.name,
+                      style: const TextStyle(fontSize: 16)),
+                  Text(
+                      list.isNotEmpty
+                          ? list[0].isOnline
+                          ? 'Online'
+                          : MyDateUtil.getLastActiveTime(
+                          context: context,
+                          lastActive: list[0].lastActive)
+                          : MyDateUtil.getLastActiveTime(
+                          context: context,
+                          lastActive: widget.user.lastActive),
+                      style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _chatInput() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Card(
+              margin: const EdgeInsets.symmetric(horizontal: 5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Row(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _showEmoji = !_showEmoji;
+                        FocusScope.of(context).unfocus();
+                      });
+                    },
+                    icon:
+                    const Icon(Icons.emoji_emotions_outlined, color: Colors.blueGrey),
+                  ),
+                  Expanded(
+                    child: _isRecording
+                        ? Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      alignment: Alignment.centerLeft,
+                      child: const Text('Recording...'),
+                    )
+                        : TextField(
+                      controller: _textController,
+                      onTap: () {
+                        setState(() {
+                          _showEmoji = false;
+                        });
+                      },
+                      keyboardType: TextInputType.multiline,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        hintText: 'Type a message',
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                      onPressed: () async {
+                        final ImagePicker picker = ImagePicker();
+
+                        final List<XFile> images =
+                        await picker.pickMultiImage(imageQuality: 70);
+
+                        for (var i in images) {
+                          log('Image Path: ${i.path}');
+                          setState(() => _isUploading = true);
+                          await APIs.sendImage(widget.user, File(i.path));
+                          setState(() => _isUploading = false);
+                        }
+                      },
+                      icon: const Icon(Icons.image, color: Colors.blueGrey, size: 26)),
+                  IconButton(
+                      onPressed: () async {
+                        final ImagePicker picker = ImagePicker();
+
+                        final XFile? image = await picker.pickImage(
+                            source: ImageSource.camera, imageQuality: 70);
+                        if (image != null) {
+                          log('Image Path: ${image.path}');
+                          setState(() => _isUploading = true);
+
+                          await APIs.sendImage(widget.user, File(image.path));
+                          setState(() => _isUploading = false);
+                        }
+                      },
+                      icon: const Icon(Icons.camera_alt_rounded,
+                          color: Colors.blueGrey, size: 26)),
+                  // Voice message button
+                  IconButton(
+                    onPressed: ()  {
+                      _startRecording();
+                    },
+                    icon: _isRecording
+                        ? const Icon(Icons.mic_off, color: Colors.red)
+                        : const Icon(Icons.mic, color: Colors.blueGrey),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          MaterialButton(
+            onPressed: () {
+              if (_textController.text.isNotEmpty) {
+                if (_list.isEmpty) {
+                  APIs.sendFirstMessage(widget.user, _textController.text, 'text');
+                } else {
+                  APIs.sendMessage(widget.user, _textController.text, 'text');
+                }
+                _textController.clear();
+              }
+            },
+            padding: const EdgeInsets.all(8),
+            minWidth: 0,
+            shape: const CircleBorder(),
+            color: Colors.blue,
+            child: const Icon(Icons.send),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _startRecording() async {
+    if (_isRecording) {
+      await _audioRecorder.stopRecorder();
+      setState(() {
+        _isRecording = false;
+      });
+
+      // Send the voice message
+      if (_audioPath.isNotEmpty) {
+        if (_list.isEmpty) {
+          APIs.sendFirstMessage(widget.user, _audioPath, 'audio');
+        } else {
+          APIs.sendMessage(widget.user, _audioPath, 'audio');
+        }
+      }
+    } else {
+      final path = await _audioRecorder.startRecorder(
+        toFile: 'path/to/your/audio/file.aac',
+        codec: Codec.aacMP4,
+      );
+      setState(() {
+        _isRecording = true;
+
+      });
+    }
+  }
+}
