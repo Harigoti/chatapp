@@ -112,7 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (_) => const HelpScreen(),
                       ),
                     );
-                  } else if (value == 'tell a friend') {
+                  } else if (value == 'tell a friend about App') {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
