@@ -36,31 +36,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: const Text('Profile'),
           centerTitle: true,
         ),
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: FloatingActionButton.extended(
-            onPressed: () async {
-              await APIs.updateActiveStatus(false);
-              Dialogs.showProgressBar(context);
-              await APIs.auth.signOut().then((value) async {
-                await GoogleSignIn().signOut().then((value) {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                  APIs.auth = FirebaseAuth.instance;
-                  Navigator.pushReplacement(context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen()));
-                });
-              });
-            },
-            backgroundColor: Colors.blue,
-            icon: const Icon(Icons.logout, color: Colors.white),
-            label: const Text('Logout',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                )),
-          ),
-        ),
         body: Form(
           key: _formKey,
           child: Padding(

@@ -4,6 +4,7 @@ import 'package:chatapp/api/apis.dart';
 import 'package:chatapp/screens/help.dart';
 import 'package:chatapp/screens/invite_a_friend.dart';
 import 'package:chatapp/screens/profile_screen.dart';
+import 'package:chatapp/screens/setting/setting_page.dart';
 import 'package:chatapp/widgets/chat_user_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -102,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ProfileScreen(user: APIs.me),
+                        builder: (_) => SettingPage(user: APIs.me,),
                       ),
                     );
                   } else if (value == 'help') {
@@ -130,16 +131,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ).toList();
-                },
-              ),
-              // Light and Dark mode toggle button
-              Switch(
-                value: _isDarkMode,
-                onChanged: (value) {
-                  setState(() {
-                    _isDarkMode = value;
-                    _toggleTheme();
-                  });
                 },
               ),
             ],
@@ -295,44 +286,5 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       },
     );
-  }
-
-  void _toggleTheme() {
-    if (_isDarkMode) {
-      // Switch to dark mode
-      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.black,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.black,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ));
-      // Set dark theme
-      _setTheme(ThemeData.dark());
-    } else {
-      // Switch to light mode
-      SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light.copyWith(
-        statusBarColor: Colors.white,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ));
-      // Set light theme
-      _setTheme(ThemeData.light());
-    }
-  }
-
-  void _setTheme(ThemeData theme) {
-    final MaterialApp app = MaterialApp(
-      theme: theme,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Preview'),
-        ),
-        body: const Center(
-          child: Text('Hello, World!'),
-        ),
-      ),
-    );
-    runApp(app);
   }
 }

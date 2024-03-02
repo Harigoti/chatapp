@@ -275,4 +275,10 @@ class APIs {
         .doc(message.send)
         .update({'msg': msg});
   }
+  static String? getCurrentUserPhotoUri(){
+    return auth.currentUser?.photoURL;
+  }
+  static String? getCurrentUserName(){
+    return auth.currentUser?.displayName;
+  }
 }
