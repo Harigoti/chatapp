@@ -60,7 +60,7 @@ class SettingsItem extends StatelessWidget {
               ),
         title: Text(
           title,
-          style: titleStyle ?? TextStyle(fontWeight: FontWeight.bold),
+          style: titleStyle ?? TextStyle(),
           maxLines: titleMaxLine,
           overflow: titleMaxLine != null ? overflow : null,
         ),

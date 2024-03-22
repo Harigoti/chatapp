@@ -1,5 +1,5 @@
 import 'dart:developer';
-
+import 'package:chatapp/group_chats/group_chat_screen.dart';
 import 'package:chatapp/api/apis.dart';
 import 'package:chatapp/screens/help.dart';
 import 'package:chatapp/screens/invite_a_friend.dart';
@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Scaffold(
           // AppBar
           appBar: AppBar(
-            leading: const Icon(Icons.home, color: Colors.lightBlueAccent),
+            leading: const Icon(Icons.home, color: Colors.white70),
             title: _isSearching
                 ? TextField(
               onChanged: (value) {
@@ -113,17 +113,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         builder: (_) => const HelpScreen(),
                       ),
                     );
-                  } else if (value == 'tell a friend about App') {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const InviteAFriend(),
-                      ),
-                    );
                   }
                 },
                 itemBuilder: (BuildContext context) {
-                  return {'Settings', 'Help', 'Tell a Friend'}.map(
+                  return {'Settings', 'Help'}.map(
                         (String choice) {
                       return PopupMenuItem<String>(
                         value: choice.toLowerCase(),
@@ -135,16 +128,38 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+
           // Body
+
           floatingActionButton: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: FloatingActionButton(
-              onPressed: () async {
-                _showAddDialog();
-              },
-              backgroundColor: Colors.blue,
-              child: const Icon(Icons.add_comment_rounded),
-            ),
+            padding: EdgeInsets.only(left: 30),
+
+          child: Row (
+
+          crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              FloatingActionButton(
+
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => GroupChatHomeScreen(),
+                  ),
+                ),
+                backgroundColor: Colors.blue,
+                child: const Icon(Icons.group),
+              ),
+
+             Expanded(child: Container()),
+              FloatingActionButton(
+                onPressed: () async {
+                  _showAddDialog();
+                },
+                backgroundColor: Colors.blue,
+                child: const Icon(Icons.add_comment_rounded),
+              ),
+
+          ],
+          ),
           ),
           body: Center(
             child: StreamBuilder(

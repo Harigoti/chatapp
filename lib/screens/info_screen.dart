@@ -26,14 +26,15 @@ class _InfoScreenState extends State<InfoScreen> {
           centerTitle: true,
         ),
         floatingActionButton: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+
           mainAxisSize: MainAxisSize.max,
           crossAxisAlignment: CrossAxisAlignment.center,
-
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
+
             const Text(
 
-              'Joined On: ',
+              '  Joined On: ',
 
               style: TextStyle(
                   fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),

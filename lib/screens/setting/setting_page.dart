@@ -1,3 +1,4 @@
+import 'package:chatapp/screens/about.dart';
 import 'package:chatapp/screens/profile_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
@@ -31,7 +32,7 @@ class _SettingPageState extends State<SettingPage> {
       appBar: AppBar(
         title: Text(
           "Settings",
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white ),
         ),
         centerTitle: true,
         backgroundColor: Colors.transparent,
@@ -53,15 +54,7 @@ class _SettingPageState extends State<SettingPage> {
             ),
             SettingsGroup(
               items: [
-                SettingsItem(
-                  onTap: () {},
-                  icons: CupertinoIcons.pencil_outline,
-                  iconStyle: IconStyle(),
-                  title: 'Appearance ',
-                  subtitle: "Make App yours Appearance",
-                  titleMaxLine: 1,
-                  subtitleMaxLine: 1,
-                ),
+
                 SettingsItem(
                   onTap: () {
                     Navigator.push(
@@ -69,50 +62,29 @@ class _SettingPageState extends State<SettingPage> {
                         MaterialPageRoute(
                             builder: (_) => const InviteAFriend()));
                   },
-                  icons: CupertinoIcons.pencil_outline,
+                  icons: CupertinoIcons.t_bubble,
                   iconStyle: IconStyle(),
                   title: 'Tell a friend ',
+                  subtitle: "Invite Friend to App",
                   titleMaxLine: 1,
                   subtitleMaxLine: 1,
                 ),
-                SettingsItem(
-                  onTap: () {},
-                  icons: Icons.fingerprint,
-                  iconStyle: IconStyle(
-                    iconsColor: Colors.white,
-                    withBackground: true,
-                    backgroundColor: Colors.red,
-                  ),
-                  title: 'Privacy',
-                  subtitle: "Lock Ziar'App to improve your privacy",
-                ),
-                SettingsItem(
-                  onTap: () {},
-                  icons: Icons.dark_mode_rounded,
-                  iconStyle: IconStyle(
-                    iconsColor: Colors.white,
-                    withBackground: true,
-                    backgroundColor: Colors.red,
-                  ),
-                  title: 'Dark mode',
-                  subtitle: "Automatic",
-                  trailing: Switch.adaptive(
-                    value: false,
-                    onChanged: (value) {},
-                  ),
-                ),
+
               ],
             ),
             SettingsGroup(
               items: [
                 SettingsItem(
-                  onTap: () {},
-                  icons: Icons.info_rounded,
+                  onTap: () {Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const AboutScreen()));},
+                  icons: Icons.info_outline_rounded,
                   iconStyle: IconStyle(
                     backgroundColor: Colors.purple,
                   ),
                   title: 'About',
-                  subtitle: "Learn more about Ziar'App",
+                  subtitle: "Learn more about Chat App",
                 ),
               ],
             ),

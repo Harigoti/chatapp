@@ -33,7 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Scaffold(
         // AppBar
         appBar: AppBar(
-          title: const Text('Profile'),
+          title: const Text('Edit Profile'),
           centerTitle: true,
         ),
         body: Form(
@@ -95,7 +95,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Text(
                     widget.user.email,
                     style: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                        fontSize: 18),
                   ),
                   SizedBox(
                     width: mq.width,
@@ -182,7 +182,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         )),
                     style: ElevatedButton.styleFrom(
                       elevation: 10,
-                      minimumSize: Size(mq.width * 0.5, mq.height * 0.06),
+                      minimumSize: Size(mq.width * 0.2, mq.height * 0.06),
                       backgroundColor: Colors.blue,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),

@@ -62,7 +62,7 @@ class SimpleUserCard extends StatelessWidget {
             child: Text(
               userName,
               style: (textStyle == null)
-                  ? TextStyle(fontWeight: FontWeight.bold, fontSize: 20)
+                  ? TextStyle(fontSize: 20)
                   : textStyle,
             ),
           ),
