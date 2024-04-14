@@ -32,7 +32,7 @@ class _CreateGroupState extends State<CreateGroup> {
     });
 
     for (int i = 0; i < widget.membersList.length; i++) {
-      String uid = widget.membersList[i]['uid'];
+      String uid = widget.membersList[i]['id'];
 
       await _firestore
           .collection('users')

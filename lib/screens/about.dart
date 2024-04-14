@@ -51,7 +51,7 @@ class _AboutScreenState extends State<AboutScreen> {
               ),
             ),
             Text(
-              'Email: support@engagetalk.com',
+              'Email: support@letschat.com',
               style: TextStyle(
                 fontSize: 16,
               ),

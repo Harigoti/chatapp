@@ -34,7 +34,7 @@ class _AddMembersInGroupState extends State<AddMembersInGroup> {
         membersList.add({
           "name": map['name'],
           "email": map['email'],
-          "uid": map['uid'],
+          "id": map['id'],
           "isAdmin": true,
         });
       });
@@ -46,13 +46,18 @@ class _AddMembersInGroupState extends State<AddMembersInGroup> {
       isLoading = true;
     });
 
+    // Fetch all users
     await _firestore
         .collection('users')
-        .where("email", isEqualTo: _search.text)
         .get()
         .then((value) {
       setState(() {
-        userMap = value.docs[0].data();
+        // Filter users whose email contains the search text
+        var users = value.docs
+            .map((doc) => doc.data())
+            .where((user) => user['email'].contains(_search.text))
+            .toList();
+        userMap = users.isNotEmpty ? users.first : null;
         isLoading = false;
       });
       print(userMap);
@@ -63,7 +68,7 @@ class _AddMembersInGroupState extends State<AddMembersInGroup> {
     bool isAlreadyExist = false;
 
     for (int i = 0; i < membersList.length; i++) {
-      if (membersList[i]['uid'] == userMap!['uid']) {
+      if (membersList[i]['id'] == userMap!['id']) {
         isAlreadyExist = true;
       }
     }
@@ -73,17 +78,17 @@ class _AddMembersInGroupState extends State<AddMembersInGroup> {
         membersList.add({
           "name": userMap!['name'],
           "email": userMap!['email'],
-          "uid": userMap!['uid'],
+          "id": userMap!['id'],
           "isAdmin": false,
         });
-
         userMap = null;
+        _search.text = "";
       });
     }
   }
 
   void onRemoveMembers(int index) {
-    if (membersList[index]['uid'] != _auth.currentUser!.uid) {
+    if (membersList[index]['id'] != _auth.currentUser!.uid) {
       setState(() {
         membersList.removeAt(index);
       });
@@ -130,6 +135,13 @@ class _AddMembersInGroupState extends State<AddMembersInGroup> {
                 width: size.width / 1.15,
                 child: TextField(
                   controller: _search,
+                  onChanged: (value) {
+                    if (!value.isEmpty) {
+                      setState(() {
+                        onSearch();
+                      });
+                    }
+                  },
                   decoration: InputDecoration(
                     hintText: "Search",
                     border: OutlineInputBorder(
@@ -142,40 +154,29 @@ class _AddMembersInGroupState extends State<AddMembersInGroup> {
             SizedBox(
               height: size.height / 50,
             ),
-            isLoading
-                ? Container(
-              height: size.height / 12,
-              width: size.height / 12,
-              alignment: Alignment.center,
-              child: CircularProgressIndicator(),
-            )
-                : ElevatedButton(
-              onPressed: onSearch,
-              child: Text("Search"),
-            ),
             userMap != null
                 ? ListTile(
-              onTap: onResultTap,
-              leading: Icon(Icons.account_box),
-              title: Text(userMap!['name']),
-              subtitle: Text(userMap!['email']),
-              trailing: Icon(Icons.add),
-            )
+                    onTap: onResultTap,
+                    leading: Icon(Icons.account_box),
+                    title: Text(userMap!['name']),
+                    subtitle: Text(userMap!['email']),
+                    trailing: Icon(Icons.add),
+                  )
                 : SizedBox(),
           ],
         ),
       ),
       floatingActionButton: membersList.length >= 1
           ? FloatingActionButton(
-        child: Icon(Icons.forward),
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => CreateGroup(
-              membersList: membersList,
-            ),
-          ),
-        ),
-      )
+              child: Icon(Icons.forward),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => CreateGroup(
+                    membersList: membersList,
+                  ),
+                ),
+              ),
+            )
           : SizedBox(),
     );
   }

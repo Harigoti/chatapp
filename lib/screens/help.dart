@@ -44,7 +44,7 @@ class _HelpScreenState extends State<HelpScreen> {
             ),
             SizedBox(height: 8),
             Text(
-              "2. For any technical issues, you can contact our support team at support@example.com.",
+              "2. For any technical issues, you can contact our support team at support@letschat.com.",
               style: TextStyle(
                 fontSize: 16,
               ),

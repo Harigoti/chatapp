@@ -52,6 +52,7 @@ dependencies:
   gallery_saver: ^2.3.2
   flutter_launcher_icons: ^0.10.0
   flutter_sound: ^8.4.0
+  uuid: ^3.0.4
   another_audio_recorder: ^1.1.0
 
 dev_dependencies:

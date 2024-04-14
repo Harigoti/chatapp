@@ -43,16 +43,17 @@ class _GroupInfoState extends State<GroupInfo> {
   bool checkAdmin() {
     bool isAdmin = false;
 
-    membersList.forEach((element) {
-      if (element['uid'] == _auth.currentUser!.uid) {
-        isAdmin = element['isAdmin'];
+    for (var element in membersList) {
+      if (element['id'] == _auth.currentUser!.uid) {
+        isAdmin = element['isAdmin'] ?? false;
+        break;
       }
-    });
+    }
+
     return isAdmin;
   }
-
   Future removeMembers(int index) async {
-    String uid = membersList[index]['uid'];
+    String uid = membersList[index]['id'];
 
     setState(() {
       isLoading = true;
@@ -77,7 +78,7 @@ class _GroupInfoState extends State<GroupInfo> {
 
   void showDialogBox(int index) {
     if (checkAdmin()) {
-      if (_auth.currentUser!.uid != membersList[index]['uid']) {
+      if (_auth.currentUser!.uid != membersList[index]['id']) {
         showDialog(
             context: context,
             builder: (context) {
@@ -99,7 +100,7 @@ class _GroupInfoState extends State<GroupInfo> {
       });
 
       for (int i = 0; i < membersList.length; i++) {
-        if (membersList[i]['uid'] == _auth.currentUser!.uid) {
+        if (membersList[i]['id'] == _auth.currentUser!.uid) {
           membersList.removeAt(i);
         }
       }

@@ -6,9 +6,9 @@ class AddMembersINGroup extends StatefulWidget {
   final List membersList;
   const AddMembersINGroup(
       {required this.name,
-        required this.membersList,
-        required this.groupChatId,
-        Key? key})
+      required this.membersList,
+      required this.groupChatId,
+      Key? key})
       : super(key: key);
 
   @override
@@ -34,13 +34,15 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
       isLoading = true;
     });
 
-    await _firestore
-        .collection('users')
-        .where("email", isEqualTo: _search.text)
-        .get()
-        .then((value) {
+    // Fetch all users
+    await _firestore.collection('users').get().then((value) {
       setState(() {
-        userMap = value.docs[0].data();
+        // Filter users whose email contains the search text
+        var users = value.docs
+            .map((doc) => doc.data())
+            .where((user) => user['email'].contains(_search.text))
+            .toList();
+        userMap = users.isNotEmpty ? users.first : null;
         isLoading = false;
       });
       print(userMap);
@@ -48,7 +50,14 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
   }
 
   void onAddMembers() async {
-    membersList.add(userMap);
+    Map<String, dynamic> member = {
+      'email': userMap!['email'],
+      'id': userMap!['id'],
+      'isAdmin': false,
+      'name': userMap!['name'],
+    };
+
+    membersList.add(member);
 
     await _firestore.collection('groups').doc(widget.groupChatId).update({
       "members": membersList,
@@ -56,10 +65,21 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
 
     await _firestore
         .collection('users')
-        .doc(userMap!['uid'])
+        .doc(userMap!['id'])
         .collection('groups')
         .doc(widget.groupChatId)
         .set({"name": widget.name, "id": widget.groupChatId});
+
+    // Clear the search field
+    _search.clear();
+    setState(() {
+      userMap = null;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text("Member added successfully"),
+      duration: Duration(seconds: 5),
+    ));
   }
 
   @override
@@ -86,6 +106,13 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
                 width: size.width / 1.15,
                 child: TextField(
                   controller: _search,
+                  onChanged: (value) {
+                    if (value.isNotEmpty) {
+                      setState(() {
+                        onSearch();
+                      });
+                    }
+                  },
                   decoration: InputDecoration(
                     hintText: "Search",
                     border: OutlineInputBorder(
@@ -98,25 +125,14 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
             SizedBox(
               height: size.height / 50,
             ),
-            isLoading
-                ? Container(
-              height: size.height / 12,
-              width: size.height / 12,
-              alignment: Alignment.center,
-              child: CircularProgressIndicator(),
-            )
-                : ElevatedButton(
-              onPressed: onSearch,
-              child: Text("Search"),
-            ),
             userMap != null
                 ? ListTile(
-              onTap: onAddMembers,
-              leading: Icon(Icons.account_box),
-              title: Text(userMap!['name']),
-              subtitle: Text(userMap!['email']),
-              trailing: Icon(Icons.add),
-            )
+                    onTap: onAddMembers,
+                    leading: Icon(Icons.account_box),
+                    title: Text(userMap!['name']),
+                    subtitle: Text(userMap!['email']),
+                    trailing: Icon(Icons.add),
+                  )
                 : SizedBox(),
           ],
         ),

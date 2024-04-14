@@ -56,7 +56,7 @@ class GroupChatRoom extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              height: size.height / 1.27,
+              height: size.height / 1.35,
               width: size.width,
               child: StreamBuilder<QuerySnapshot>(
                 stream: _firestore
