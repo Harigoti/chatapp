@@ -98,82 +98,90 @@ class GroupChatRoom extends StatelessWidget {
               icon: Icon(Icons.more_vert)),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            Container(
-              height: size.height / 1.35,
-              width: size.width,
-              child: StreamBuilder<QuerySnapshot>(
-                stream: _firestore
-                    .collection('groups')
-                    .doc(groupChatId)
-                    .collection('chats')
-                    .orderBy('time')
-                    .snapshots(),
-                builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                  if (snapshot.hasData) {
-                    return ListView.builder(
-                      itemCount: snapshot.data!.docs.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        Map<String, dynamic> chatMap =
-                        snapshot.data!.docs[index].data()
-                        as Map<String, dynamic>;
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("images/background.jpg"), // Replace "assets/background_image.jpg" with your image path
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Container(
+                height: size.height / 1.35,
+                width: size.width,
+                child: StreamBuilder<QuerySnapshot>(
+                  stream: _firestore
+                      .collection('groups')
+                      .doc(groupChatId)
+                      .collection('chats')
+                      .orderBy('time')
+                      .snapshots(),
+                  builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+                    if (snapshot.hasData) {
+                      return ListView.builder(
+                        itemCount: snapshot.data!.docs.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          Map<String, dynamic> chatMap =
+                          snapshot.data!.docs[index].data()
+                          as Map<String, dynamic>;
 
-                        return messageTile(context, size, chatMap, snapshot, index);
-                      },
-                    );
-                  } else {
-                    return Container();
-                  }
-                },
-              ),
-            ),
-            Container(
-              height: size.height / 10,
-              width: size.width,
-              alignment: Alignment.center,
-              child: Container(
-                height: size.height / 12,
-                width: size.width / 1.1,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: size.height / 17,
-                      width: size.width / 1.3,
-                      child: TextField(
-                        controller: _message,
-                        decoration: InputDecoration(
-                            suffixIcon: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  onPressed: () => _pickImageFromCamera(context), // Pick image from camera
-                                  icon: Icon(Icons.camera_alt),
-                                ),
-                                IconButton(
-                                  onPressed: () => _pickImageFromGallery(context),
-                                  icon: Icon(Icons.photo),
-                                ),
-                              ],
-                            ),
-                            hintText: "Send Message",
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            )),
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.send),
-                      onPressed: onSendMessage,
-                      color: Colors.blue, // Set send button color to blue
-                    ),
-                  ],
+                          return messageTile(context, size, chatMap, snapshot, index);
+                        },
+                      );
+                    } else {
+                      return Container();
+                    }
+                  },
                 ),
               ),
-            ),
-          ],
+              Container(
+                height: size.height / 10,
+                width: size.width,
+                alignment: Alignment.center,
+                child: Container(
+                  height: size.height / 12,
+                  width: size.width / 1.1,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: size.height / 17,
+                        width: size.width / 1.3,
+                        child: TextField(
+                          controller: _message,
+                          decoration: InputDecoration(
+                              suffixIcon: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    onPressed: () => _pickImageFromCamera(context), // Pick image from camera
+                                    icon: Icon(Icons.camera_alt),
+                                  ),
+                                  IconButton(
+                                    onPressed: () => _pickImageFromGallery(context),
+                                    icon: Icon(Icons.photo),
+                                  ),
+                                ],
+                              ),
+                              hintText: "Send Message",
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              )),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.send),
+                        onPressed: onSendMessage,
+                        color: Colors.blue, // Set send button color to blue
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
