@@ -9,7 +9,6 @@ import 'package:chatapp/models/user.dart';
 import 'package:chatapp/widgets/massage_card.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_sound/flutter_sound.dart';
 import 'package:image_picker/image_picker.dart';
 import '../main.dart';
 import 'info_screen.dart';
@@ -28,20 +27,10 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _showEmoji = false;
   bool _isUploading = false;
   bool _isRecording = false;
-  FlutterSoundRecorder _audioRecorder = FlutterSoundRecorder();
-  String _audioPath = '';
+
+
 
   @override
-  void initState() {
-    super.initState();
-    _audioRecorder.openAudioSession();
-  }
-
-  @override
-  void dispose() {
-    _audioRecorder.closeAudioSession();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -279,14 +268,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       icon: const Icon(Icons.camera_alt_rounded,
                           color: Colors.blueGrey, size: 26)),
                   // Voice message button
-                  IconButton(
-                    onPressed: ()  {
-                      _startRecording();
-                    },
-                    icon: _isRecording
-                        ? const Icon(Icons.mic_off, color: Colors.red)
-                        : const Icon(Icons.mic, color: Colors.blueGrey),
-                  ),
+
                 ],
               ),
             ),
@@ -313,30 +295,5 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  void _startRecording() async {
-    if (_isRecording) {
-      await _audioRecorder.stopRecorder();
-      setState(() {
-        _isRecording = false;
-      });
 
-      // Send the voice message
-      if (_audioPath.isNotEmpty) {
-        if (_list.isEmpty) {
-          APIs.sendFirstMessage(widget.user, _audioPath, 'audio');
-        } else {
-          APIs.sendMessage(widget.user, _audioPath, 'audio');
-        }
-      }
-    } else {
-      final path = await _audioRecorder.startRecorder(
-        toFile: 'path/to/your/audio/file.aac',
-        codec: Codec.aacMP4,
-      );
-      setState(() {
-        _isRecording = true;
-
-      });
-    }
-  }
 }

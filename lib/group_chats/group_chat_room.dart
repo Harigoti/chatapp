@@ -1,7 +1,11 @@
+import 'dart:io';
+
 import 'package:chatapp/group_chats/group_info.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 class GroupChatRoom extends StatelessWidget {
   final String groupChatId, groupName;
@@ -24,6 +28,48 @@ class GroupChatRoom extends StatelessWidget {
 
       _message.clear();
 
+      await _firestore
+          .collection('groups')
+          .doc(groupChatId)
+          .collection('chats')
+          .add(chatData);
+    }
+  }
+
+  Future<void> _pickImageFromGallery() async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(source: ImageSource.gallery); // Changed from getImage to pickImage
+    if (pickedImage != null) {
+      onSendImageMessage(pickedImage.path);
+    }
+  }
+
+  Future<void> _pickImageFromCamera() async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(source: ImageSource.camera); // Capture image from camera
+    if (pickedImage != null) {
+      onSendImageMessage(pickedImage.path);
+    }
+  }
+
+  void onSendImageMessage(String imagePath) async {
+    if (imagePath.isNotEmpty) {
+      // Upload the image to Firebase Storage
+      Reference storageReference =
+      FirebaseStorage.instance.ref().child('chat_images/${DateTime.now().millisecondsSinceEpoch}');
+      UploadTask uploadTask = storageReference.putFile(File(imagePath));
+      await uploadTask.whenComplete(() => null);
+      String imageUrl = await storageReference.getDownloadURL();
+
+      // Create chat message data
+      Map<String, dynamic> chatData = {
+        "sendBy": _auth.currentUser!.displayName,
+        "message": imageUrl, // Store image URL in Firestore
+        "type": "img", // Mark message as image type
+        "time": FieldValue.serverTimestamp(),
+      };
+
+      // Add message data to Firestore
       await _firestore
           .collection('groups')
           .doc(groupChatId)
@@ -99,9 +145,18 @@ class GroupChatRoom extends StatelessWidget {
                       child: TextField(
                         controller: _message,
                         decoration: InputDecoration(
-                            suffixIcon: IconButton(
-                              onPressed: () {},
-                              icon: Icon(Icons.photo),
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  onPressed: _pickImageFromCamera, // Pick image from camera
+                                  icon: Icon(Icons.camera_alt),
+                                ),
+                                IconButton(
+                                  onPressed: _pickImageFromGallery,
+                                  icon: Icon(Icons.photo),
+                                ),
+                              ],
                             ),
                             hintText: "Send Message",
                             border: OutlineInputBorder(
@@ -110,7 +165,10 @@ class GroupChatRoom extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                        icon: Icon(Icons.send), onPressed: onSendMessage),
+                      icon: Icon(Icons.send),
+                      onPressed: onSendMessage,
+                      color: Colors.blue, // Set send button color to blue
+                    ),
                   ],
                 ),
               ),
@@ -166,13 +224,33 @@ class GroupChatRoom extends StatelessWidget {
           alignment: chatMap['sendBy'] == _auth.currentUser!.displayName
               ? Alignment.centerRight
               : Alignment.centerLeft,
-          child: Container(
-            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 14),
-            margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-            height: size.height / 2,
-            child: Image.network(
-              chatMap['message'],
-            ),
+          child: Column(
+            crossAxisAlignment: chatMap['sendBy'] == _auth.currentUser!.displayName
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
+            children: [
+              Text(
+                chatMap['sendBy'],
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey,
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(15),
+                  color: Colors.grey[300],
+                ),
+                child: Image.network(
+                  chatMap['message'],
+                  fit: BoxFit.cover,
+                  width: size.width / 2, // Adjust image width as needed
+                ),
+              ),
+            ],
           ),
         );
       } else if (chatMap['type'] == "notify") {
