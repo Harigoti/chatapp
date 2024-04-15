@@ -36,23 +36,23 @@ class GroupChatRoom extends StatelessWidget {
     }
   }
 
-  Future<void> _pickImageFromGallery() async {
+  Future<void> _pickImageFromGallery(BuildContext context) async {
     final picker = ImagePicker();
     final pickedImage = await picker.pickImage(source: ImageSource.gallery); // Changed from getImage to pickImage
     if (pickedImage != null) {
-      onSendImageMessage(pickedImage.path);
+      onSendImageMessage(context, pickedImage.path);
     }
   }
 
-  Future<void> _pickImageFromCamera() async {
+  Future<void> _pickImageFromCamera(BuildContext context) async {
     final picker = ImagePicker();
     final pickedImage = await picker.pickImage(source: ImageSource.camera); // Capture image from camera
     if (pickedImage != null) {
-      onSendImageMessage(pickedImage.path);
+      onSendImageMessage(context, pickedImage.path);
     }
   }
 
-  void onSendImageMessage(String imagePath) async {
+  void onSendImageMessage(BuildContext context, String imagePath) async {
     if (imagePath.isNotEmpty) {
       // Upload the image to Firebase Storage
       Reference storageReference =
@@ -111,16 +111,16 @@ class GroupChatRoom extends StatelessWidget {
                     .collection('chats')
                     .orderBy('time')
                     .snapshots(),
-                builder: (context, snapshot) {
+                builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (snapshot.hasData) {
                     return ListView.builder(
                       itemCount: snapshot.data!.docs.length,
-                      itemBuilder: (context, index) {
+                      itemBuilder: (BuildContext context, int index) {
                         Map<String, dynamic> chatMap =
                         snapshot.data!.docs[index].data()
                         as Map<String, dynamic>;
 
-                        return messageTile(size, chatMap);
+                        return messageTile(context, size, chatMap, snapshot, index);
                       },
                     );
                   } else {
@@ -149,11 +149,11 @@ class GroupChatRoom extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  onPressed: _pickImageFromCamera, // Pick image from camera
+                                  onPressed: () => _pickImageFromCamera(context), // Pick image from camera
                                   icon: Icon(Icons.camera_alt),
                                 ),
                                 IconButton(
-                                  onPressed: _pickImageFromGallery,
+                                  onPressed: () => _pickImageFromGallery(context),
                                   icon: Icon(Icons.photo),
                                 ),
                               ],
@@ -179,78 +179,156 @@ class GroupChatRoom extends StatelessWidget {
     );
   }
 
-  Widget messageTile(Size size, Map<String, dynamic> chatMap) {
+  Widget messageTile(BuildContext context, Size size, Map<String, dynamic> chatMap, AsyncSnapshot<QuerySnapshot> snapshot, int index) {
     return Builder(builder: (_) {
       if (chatMap['type'] == "text") {
-        return Container(
-          width: size.width,
-          alignment: chatMap['sendBy'] == _auth.currentUser!.displayName
-              ? Alignment.centerRight
-              : Alignment.centerLeft,
+        return GestureDetector(
+          onLongPress: () {
+            // Show options for delete
+            showModalBottomSheet(
+              context: context,
+              builder: (_) {
+                return Container(
+                  child: Wrap(
+                    children: <Widget>[
+                      ListTile(
+                        leading: Icon(Icons.delete),
+                        title: Text('Delete'),
+                        onTap: () {
+                          // Delete the chat
+                          _firestore
+                              .collection('groups')
+                              .doc(groupChatId)
+                              .collection('chats')
+                              .doc(snapshot.data!.docs[index].id)
+                              .delete();
+                          Navigator.pop(context);
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(Icons.edit),
+                        title: Text('Update'),
+                        onTap: () {
+                          // Update the chat
+                          // You can implement updating logic here
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
           child: Container(
-              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 14),
-              margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(15),
-                color: Colors.blue,
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    chatMap['sendBy'],
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                  ),
-                  SizedBox(
-                    height: size.height / 200,
-                  ),
-                  Text(
-                    chatMap['message'],
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              )),
-        );
-      } else if (chatMap['type'] == "img") {
-        return Container(
-          width: size.width,
-          alignment: chatMap['sendBy'] == _auth.currentUser!.displayName
-              ? Alignment.centerRight
-              : Alignment.centerLeft,
-          child: Column(
-            crossAxisAlignment: chatMap['sendBy'] == _auth.currentUser!.displayName
-                ? CrossAxisAlignment.end
-                : CrossAxisAlignment.start,
-            children: [
-              Text(
-                chatMap['sendBy'],
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+            width: size.width,
+            alignment: chatMap['sendBy'] == _auth.currentUser!.displayName
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
+            child: Container(
+                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 14),
                 margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(15),
-                  color: Colors.grey[300],
+                  color: Colors.blue,
                 ),
-                child: Image.network(
-                  chatMap['message'],
-                  fit: BoxFit.cover,
-                  width: size.width / 2, // Adjust image width as needed
+                child: Column(
+                  children: [
+                    Text(
+                      chatMap['sendBy'],
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(
+                      height: size.height / 200,
+                    ),
+                    Text(
+                      chatMap['message'],
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                )),
+          ),
+        );
+      } else if (chatMap['type'] == "img") {
+        return GestureDetector(
+          onLongPress: () {
+            // Show options for delete or update
+            showModalBottomSheet(
+              context: context,
+              builder: (_) {
+                return Container(
+                  child: Wrap(
+                    children: <Widget>[
+                      ListTile(
+                        leading: Icon(Icons.delete),
+                        title: Text('Delete'),
+                        onTap: () {
+                          // Delete the chat
+                          _firestore
+                              .collection('groups')
+                              .doc(groupChatId)
+                              .collection('chats')
+                              .doc(snapshot.data!.docs[index].id)
+                              .delete();
+                          Navigator.pop(context);
+                        },
+                      ),
+                      ListTile(
+                        leading: Icon(Icons.edit),
+                        title: Text('Update'),
+                        onTap: () {
+                          // Update the chat
+                          // You can implement updating logic here
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+          child: Container(
+            width: size.width,
+            alignment: chatMap['sendBy'] == _auth.currentUser!.displayName
+                ? Alignment.centerRight
+                : Alignment.centerLeft,
+            child: Column(
+              crossAxisAlignment: chatMap['sendBy'] == _auth.currentUser!.displayName
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
+              children: [
+                Text(
+                  chatMap['sendBy'],
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey,
+                  ),
                 ),
-              ),
-            ],
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+                  margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    color: Colors.grey[300],
+                  ),
+                  child: Image.network(
+                    chatMap['message'],
+                    fit: BoxFit.cover,
+                    width: size.width / 2, // Adjust image width as needed
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       } else if (chatMap['type'] == "notify") {

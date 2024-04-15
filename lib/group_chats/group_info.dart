@@ -1,8 +1,9 @@
-import 'package:chatapp/Screens/home_screen.dart';
-import 'package:chatapp/group_chats/add_members.dart';
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:chatapp/group_chats/add_members.dart';
+import 'package:chatapp/Screens/home_screen.dart';
 
 class GroupInfo extends StatefulWidget {
   final String groupId, groupName;
@@ -52,6 +53,19 @@ class _GroupInfoState extends State<GroupInfo> {
 
     return isAdmin;
   }
+
+  void showToast(String message) {
+    Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: ToastGravity.BOTTOM,
+      timeInSecForIosWeb: 1,
+      backgroundColor: Colors.black87,
+      textColor: Colors.white,
+      fontSize: 16.0,
+    );
+  }
+
   Future removeMembers(int index) async {
     String uid = membersList[index]['id'];
 
@@ -73,6 +87,10 @@ class _GroupInfoState extends State<GroupInfo> {
       setState(() {
         isLoading = false;
       });
+
+      showToast("Successfully removed");
+
+      Navigator.of(context).pop();
     });
   }
 
@@ -180,13 +198,9 @@ class _GroupInfoState extends State<GroupInfo> {
                   ],
                 ),
               ),
-
-              //
-
               SizedBox(
                 height: size.height / 20,
               ),
-
               Container(
                 width: size.width / 1.1,
                 child: Text(
@@ -197,13 +211,9 @@ class _GroupInfoState extends State<GroupInfo> {
                   ),
                 ),
               ),
-
               SizedBox(
                 height: size.height / 20,
               ),
-
-              // Members Name
-
               checkAdmin()
                   ? ListTile(
                 onTap: () => Navigator.of(context).push(
@@ -227,7 +237,6 @@ class _GroupInfoState extends State<GroupInfo> {
                 ),
               )
                   : SizedBox(),
-
               Flexible(
                 child: ListView.builder(
                   itemCount: membersList.length,
@@ -251,7 +260,6 @@ class _GroupInfoState extends State<GroupInfo> {
                   },
                 ),
               ),
-
               ListTile(
                 onTap: onLeaveGroup,
                 leading: Icon(

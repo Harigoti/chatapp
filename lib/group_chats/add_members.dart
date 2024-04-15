@@ -78,7 +78,7 @@ class _AddMembersINGroupState extends State<AddMembersINGroup> {
 
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text("Member added successfully"),
-      duration: Duration(seconds: 5),
+      duration: Duration(seconds: 2),
     ));
   }
 

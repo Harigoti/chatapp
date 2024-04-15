@@ -9,6 +9,7 @@ import 'package:chatapp/models/user.dart';
 import 'package:chatapp/widgets/massage_card.dart';
 import 'package:emoji_picker_flutter/emoji_picker_flutter.dart';
 import 'package:flutter/material.dart';
+
 import 'package:image_picker/image_picker.dart';
 import '../main.dart';
 import 'info_screen.dart';
