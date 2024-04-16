@@ -87,15 +87,16 @@ class GroupChatRoom extends StatelessWidget {
         title: Text(groupName),
         actions: [
           IconButton(
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => GroupInfo(
-                    groupName: groupName,
-                    groupId: groupChatId,
-                  ),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => GroupInfo(
+                  groupName: groupName,
+                  groupId: groupChatId,
                 ),
               ),
-              icon: Icon(Icons.more_vert)),
+            ),
+            icon: Icon(Icons.more_vert),
+          ),
         ],
       ),
       body: Container(
@@ -120,12 +121,15 @@ class GroupChatRoom extends StatelessWidget {
                       .snapshots(),
                   builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
                     if (snapshot.hasData) {
+                      WidgetsBinding.instance!.addPostFrameCallback((_) {
+                        // Scroll the ListView to its bottom after building the widget
+                        _scrollToBottom(context);
+                      });
+
                       return ListView.builder(
                         itemCount: snapshot.data!.docs.length,
                         itemBuilder: (BuildContext context, int index) {
-                          Map<String, dynamic> chatMap =
-                          snapshot.data!.docs[index].data()
-                          as Map<String, dynamic>;
+                          Map<String, dynamic> chatMap = snapshot.data!.docs[index].data() as Map<String, dynamic>;
 
                           return messageTile(context, size, chatMap, snapshot, index);
                         },
@@ -152,29 +156,33 @@ class GroupChatRoom extends StatelessWidget {
                         child: TextField(
                           controller: _message,
                           decoration: InputDecoration(
-                              suffixIcon: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    onPressed: () => _pickImageFromCamera(context), // Pick image from camera
-                                    icon: Icon(Icons.camera_alt),
-                                  ),
-                                  IconButton(
-                                    onPressed: () => _pickImageFromGallery(context),
-                                    icon: Icon(Icons.photo),
-                                  ),
-                                ],
-                              ),
-                              hintText: "Send Message",
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              )),
+                            suffixIcon: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  onPressed: () => _pickImageFromCamera(context),
+                                  icon: Icon(Icons.camera_alt),
+                                ),
+                                IconButton(
+                                  onPressed: () => _pickImageFromGallery(context),
+                                  icon: Icon(Icons.photo),
+                                ),
+                              ],
+                            ),
+                            hintText: "Send Message",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
                         ),
                       ),
                       IconButton(
                         icon: Icon(Icons.send),
-                        onPressed: onSendMessage,
-                        color: Colors.blue, // Set send button color to blue
+                        onPressed: () {
+                          onSendMessage();
+                          _scrollToBottom(context); // Scroll to bottom after sending message
+                        },
+                        color: Colors.blue,
                       ),
                     ],
                   ),
@@ -234,35 +242,36 @@ class GroupChatRoom extends StatelessWidget {
                 ? Alignment.centerRight
                 : Alignment.centerLeft,
             child: Container(
-                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 14),
-                margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(15),
-                  color: Colors.blue,
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      chatMap['sendBy'],
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
+              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 14),
+              margin: EdgeInsets.symmetric(vertical: 5, horizontal: 8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(15),
+                color: Colors.blue,
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    chatMap['sendBy'],
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
                     ),
-                    SizedBox(
-                      height: size.height / 200,
+                  ),
+                  SizedBox(
+                    height: size.height / 200,
+                  ),
+                  Text(
+                    chatMap['message'],
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
                     ),
-                    Text(
-                      chatMap['message'],
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                )),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       } else if (chatMap['type'] == "img") {
@@ -364,5 +373,14 @@ class GroupChatRoom extends StatelessWidget {
         return SizedBox();
       }
     });
+  }
+
+  void _scrollToBottom(BuildContext context) {
+    final ScrollController scrollController = PrimaryScrollController.of(context)!;
+    scrollController.animateTo(
+      scrollController.position.maxScrollExtent,
+      duration: Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
   }
 }
