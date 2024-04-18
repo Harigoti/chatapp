@@ -1,3 +1,4 @@
+import 'package:chatapp/group_chats/group_chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -112,33 +113,31 @@ class _GroupInfoState extends State<GroupInfo> {
   }
 
   Future onLeaveGroup() async {
-    if (!checkAdmin()) {
-      setState(() {
-        isLoading = true;
-      });
+    setState(() {
+      isLoading = true;
+    });
 
-      for (int i = 0; i < membersList.length; i++) {
-        if (membersList[i]['id'] == _auth.currentUser!.uid) {
-          membersList.removeAt(i);
-        }
-      }
+    // Remove the current user from the members list
+    membersList.removeWhere((member) => member['id'] == _auth.currentUser!.uid);
 
-      await _firestore.collection('groups').doc(widget.groupId).update({
-        "members": membersList,
-      });
+    // Update the group's members list in Firestore
+    await _firestore.collection('groups').doc(widget.groupId).update({
+      "members": membersList,
+    });
 
-      await _firestore
-          .collection('users')
-          .doc(_auth.currentUser!.uid)
-          .collection('groups')
-          .doc(widget.groupId)
-          .delete();
+    // Remove the group from the user's list of groups
+    await _firestore
+        .collection('users')
+        .doc(_auth.currentUser!.uid)
+        .collection('groups')
+        .doc(widget.groupId)
+        .delete();
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => HomeScreen()),
-            (route) => false,
-      );
-    }
+    // Navigate back to the HomeScreen
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => HomeScreen()),
+          (route) => false,
+    );
   }
 
   @override
