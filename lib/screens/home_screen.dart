@@ -134,32 +134,32 @@ class _HomeScreenState extends State<HomeScreen> {
           floatingActionButton: Padding(
             padding: EdgeInsets.only(left: 30),
 
-          child: Row (
+            child: Row (
 
-          crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              FloatingActionButton(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                FloatingActionButton(
 
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => GroupChatHomeScreen(),
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => GroupChatHomeScreen(),
+                    ),
                   ),
+                  backgroundColor: Colors.blue,
+                  child: const Icon(Icons.group),
                 ),
-                backgroundColor: Colors.blue,
-                child: const Icon(Icons.group),
-              ),
 
-             Expanded(child: Container()),
-              FloatingActionButton(
-                onPressed: () async {
-                  _showAddDialog();
-                },
-                backgroundColor: Colors.blue,
-                child: const Icon(Icons.add_comment_rounded),
-              ),
+                Expanded(child: Container()),
+                FloatingActionButton(
+                  onPressed: () async {
+                    _showAddDialog();
+                  },
+                  backgroundColor: Colors.blue,
+                  child: const Icon(Icons.add_comment_rounded),
+                ),
 
-          ],
-          ),
+              ],
+            ),
           ),
           body: Center(
             child: StreamBuilder(

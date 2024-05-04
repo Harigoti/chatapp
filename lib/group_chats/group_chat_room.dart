@@ -226,6 +226,7 @@ class GroupChatRoom extends StatelessWidget {
                         title: Text('Update'),
                         onTap: () {
                           // Update the chat
+
                           // You can implement updating logic here
                           Navigator.pop(context);
                         },
